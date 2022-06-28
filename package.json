@@ -1,6 +1,7 @@
 {
   "devDependencies": {
-    "electron": "^19.0.6"
+    "electron": "^19.0.6",
+    "electron-builder": "^23.1.0"
   },
   "name": "placki-desktop",
   "version": "1.0.0",
@@ -21,7 +22,6 @@
     "define-properties": "^1.1.4",
     "detect-node": "^2.1.0",
     "duplexer3": "^0.1.4",
-    "electron-builder": "^23.1.0",
     "electron-store": "^8.0.2",
     "encodeurl": "^1.0.2",
     "end-of-stream": "^1.4.4",
