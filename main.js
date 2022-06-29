@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, dialog } = require("electron");
 const Store = require("electron-store")
 const fetch = require("node-fetch");
 
@@ -38,17 +38,26 @@ const createWindow = () => {
                         if (savedSessionCookie !== null && typeof savedSessionCookie === "object") {
                             const cookies = win.webContents.session.cookies;
                             await cookies.remove(url, "PHPSESSID");
-                            await cookies.set({
-                                url,
-                                name: savedSessionCookie.name,
-                                value: savedSessionCookie.value,
-                                domain: savedSessionCookie.domain,
-                                path: savedSessionCookie.path,
-                                secure: savedSessionCookie.secure,
-                                httpOnly: savedSessionCookie.httpOnly,
-                                expirationDate: null,
-                                sameSite: savedSessionCookie.sameSite
-                            });
+                            try {
+                                await cookies.set({
+                                    url,
+                                    name: savedSessionCookie.name,
+                                    value: savedSessionCookie.value,
+                                    domain: savedSessionCookie.domain,
+                                    path: savedSessionCookie.path,
+                                    secure: savedSessionCookie.secure,
+                                    httpOnly: savedSessionCookie.httpOnly,
+                                    expirationDate: Date.now() / 1000 + 3153600000,  // Expires in 100 years
+                                    sameSite: savedSessionCookie.sameSite
+                                });
+                            } catch (e) {
+                                persistence.delete("session_cookie");
+                                dialog.showErrorBox(
+                                    "nie udało się zalogować automatycznie",
+                                    "nie udało się wczytać danych o sesji. zaloguj się ponownie."
+                                );
+                            }
+
                             win.webContents.reload();
                         } else {
                             win.webContents.on("did-navigate", async () => {
