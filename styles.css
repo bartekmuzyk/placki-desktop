@@ -1,8 +1,23 @@
+@import "fonts.css";
+
 body {
     width: 100%;
     height: 100%;
+    margin: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+h1 {
+    font-family: "Racing Sans One", cursive;
+    color: dodgerblue;
+    text-shadow: dodgerblue 0 0 5px;
+    font-size: 4rem;
+}
+
+p {
+    font-family: "Josefin Sans", sans-serif;
+    font-size: 2rem;
 }
