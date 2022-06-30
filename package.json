@@ -4,7 +4,7 @@
     "electron-builder": "^23.1.0"
   },
   "name": "placki-desktop",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "aplikacja dla platformy Placki",
   "main": "main.js",
   "dependencies": {
