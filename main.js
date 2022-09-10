@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, shell } = require("electron");
+const { app, BrowserWindow, dialog, shell, ipcMain, desktopCapturer} = require("electron");
 const fetch = require("node-fetch");
 const path = require("path");
 const platform = require("os").platform();
@@ -8,7 +8,9 @@ const sleep = require("sleep-promise");
 const isDev = require("electron-is-dev");
 const Downloader = require("./downloader");
 
-const serviceInfoUrl = "http://plackistatus.atwebpages.com";
+const DEV_HOST = "http://localhost:8000";
+const SERVICE_INFO_URL = "http://plackistatus.atwebpages.com";
+
 const forceUpdate = "--force-update" in process.argv;
 
 const createWindow = async () => {
@@ -38,7 +40,7 @@ const createWindow = async () => {
 
     if (!isDev) {
         try {
-            versionResponse = await fetch(serviceInfoUrl + "/latest_version");
+            versionResponse = await fetch(SERVICE_INFO_URL + "/latest_version");
 
             if (!versionResponse.ok) throw new Error();
         } catch (e) {
@@ -103,7 +105,7 @@ const createWindow = async () => {
                         dialog.showErrorBox(
                             "aktualizacja",
                             "aktualizacja nie powiodła się i nie zostanie zainstalowana. spróbuj pobrać " +
-                            "plik AppImage ręcznie z http://plackisocial.rf.gd. treść błędu: " + e
+                            "skrpyt instalacyjny ręcznie z http://plackisocial.rf.gd. treść błędu: " + e
                         );
                         break;
                     }
@@ -129,27 +131,46 @@ const createWindow = async () => {
         }
     }
 
-    try {
-        const statusResponse = await fetch(serviceInfoUrl + "/status.json");
+    if (!isDev) {
+        try {
+            const statusResponse = await fetch(SERVICE_INFO_URL + "/status.json");
 
-        if (statusResponse.ok) {
-            const { url, maintenance } = await statusResponse.json();
+            if (statusResponse.ok) {
+                const { url, maintenance } = await statusResponse.json();
 
-            if (maintenance) {
-                setText("strona nie jest teraz dostępna do użytku. spróbuj ponownie później.");
+                if (maintenance) {
+                    setText("strona nie jest teraz dostępna do użytku. spróbuj ponownie później.");
+                } else {
+                    await win.loadURL(url);
+                }
             } else {
-                await win.loadURL(url);
+                throw new Error();
             }
-        } else {
-            throw new Error();
+        } catch (e) {
+            setText("wystąpił błąd podczas sprawdzania statusu. spróbuj ponownie później.");
         }
-    } catch (e) {
-        setText("wystąpił błąd podczas sprawdzania statusu. spróbuj ponownie później.");
+    } else {
+        setText("łączenie ze stroną deweloperską.")
+        await win.loadURL(DEV_HOST);
     }
 };
 
 app.whenReady().then(() => {
     createWindow();
+
+    ipcMain.handle("getStreamSources", async () => {
+        const sources = await desktopCapturer.getSources({
+            types: ["screen", "window"],
+            fetchWindowIcons: true,
+            thumbnailSize: {width: 0, height: 0}
+        });
+
+        return sources.map(source => ({
+            id: source.id,
+            name: source.name,
+            icon: source.appIcon?.toDataURL()
+        }));
+    });
 
     app.on("activate", () => {
         if (BrowserWindow.getAllWindows().length === 0) {
